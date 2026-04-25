@@ -1,0 +1,71 @@
+# -------------------------------------#
+# ----------- Namespace ---------------#
+# -------------------------------------#
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: foo
+---
+# -------------------------------------#
+# ---------- Deployment ---------------#
+# -------------------------------------#
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    run: nginx
+    tier: frontend
+  name: foo-nginx
+  namespace: foo
+spec:
+  replicas: 10
+  selector:
+    matchLabels:
+      run: nginx
+  strategy: 
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        run: nginx
+        tier: frontend
+    spec:
+      containers:
+        - image: nginx
+          name: nginx
+          env:
+            - name: ENVIROMENT
+              value: "dev"
+          readinessProbe:
+            initialDelaySeconds: 10
+            httpGet:
+              path: /
+              port: 80
+          livenessProbe:
+            initialDelaySeconds: 10
+            httpGet:
+              path: /
+              port: 80
+          resources:
+            limits:
+              cpu: 1
+              memory: 1Gi
+            requests:
+              cpu: 100m
+              memory: 100Mi
+      dnsPolicy: ClusterFirst
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+                - key: kubernetes.io/hostname
+                  operator: In 
+                  values:
+                  - k3d-ckad-agent-0
+                  - k3d-ckad-agent-1
+
+        
