@@ -4,7 +4,7 @@ metadata:
   name: {{ .Values.cronJob.name }}
   namespace: {{ .Values.namespace | default .Release.Namespace }}
 spec:
-  schedule: {{ .Values.cronJob.schedule }}
+  schedule: "{{ .Values.cronJob.schedule }}"
   successfulJobsHistoryLimit: {{ .Values.cronJob.successfulJobsHistoryLimit | default 3}}
   failedJobsHistoryLimit: {{ .Values.cronJob.failedJobsHistoryLimit | default 3}}
   jobTemplate:
@@ -13,13 +13,24 @@ spec:
       completions: {{ .Values.cronJob.jobTemplate.completions | default 1 }}
       template:
         spec:
-          serviceAccountName: {{ include "audit-pipeline.serviceAccountName" . }}
+          serviceAccountName: {{ .Values.rbac.serviceAccount.name }}
           containers:
           - name: {{ .Values.cronJob.jobTemplate.name }}
             image: {{ .Values.cronJob.jobTemplate.image.repository }}:{{ .Values.cronJob.jobTemplate.image.tag }}
             imagePullPolicy: IfNotPresent
             command:
-            {{ toYaml .Values.cronJob.jobTemplate.command | nindent 16 }}
-            # args:
-            # {{ toYaml .Values.cronJob.jobTemplate.args | nindent 16 }}
+            {{ toYaml .Values.cronJob.jobTemplate.command | nindent 12 }}
+            env:
+              name: URL_PIPELINE
+              value: {{ .Values.cronJob.jobTemplate.sendResultsUrl }}
+            volumeMounts:
+            - name: audit-pipeline
+              mountPath: "/audit-pipeline"
+          volumes:
+          - name: audit-pipeline
+            configMap:
+              name: {{ .Values.configMap.name }}
+              items:
+              - key: "command" 
+                path: "command"
           restartPolicy: {{ .Values.cronJob.jobTemplate.restartPolicy }}

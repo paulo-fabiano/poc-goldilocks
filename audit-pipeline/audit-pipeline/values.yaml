@@ -1,26 +1,33 @@
 # Default values for audit-pipeline.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
 
-# This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
-imagePullSecrets: []
-# This is to override the chart name.
-nameOverride: ""
-fullnameOverride: ""
-
-# This section builds out the service account more information can be found here: https://kubernetes.io/docs/concepts/security/service-accounts/
-serviceAccount:
-  # Specifies whether a service account should be created.
+rbac:
   create: true
-  # Automatically mount a ServiceAccount's API credentials?
-  automount: true
-  # The name of the service account to use.
-  name: "sa-audit-pipeline"
+  clusterRole:
+    name: cr-audit-pipeline
+    rules:
+      - apiGroups:
+          - autoscaling.k8s.io
+        resources:
+          - verticalpodautoscalers
+        verbs:
+          - get
+          - list
+
+  clusterRoleBinding:
+    name: crb-audit-pipeline
+
+  serviceAccount:
+    create: true
+    automount: true
+    # The name of the service account to use.
+    name: "sa-audit-pipeline"
+
+configMap:
+  name: "cm-audit-pipeline"
 
 cronJob:
   create: true
   name: cj-audit-pipeline
-  # Default schedule is "* */12 * * *"
   schedule: "* */12 * * *"
   successfulJobsHistoryLimit:
   failedJobsHistoryLimit:
@@ -42,6 +49,9 @@ cronJob:
     - -c 
     - echo teste
     # args:
+    # URL for send the json file with the recommendations.
+    # I'm using webhook.site for this at this moment
+    sendResultsUrl: https://webhook.site/cdcd1b17-7ed2-4f6b-af4a-e734c6fa465a
 
 
 # This is for setting Kubernetes Annotations to a Pod.

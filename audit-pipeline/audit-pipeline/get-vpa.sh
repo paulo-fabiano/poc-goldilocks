@@ -1,7 +1,5 @@
-#!/bin/bash
-
 for vpa in $(kubectl get vpa -A --no-headers | wc -l) ; \
     do kubectl get vpa -A --no-headers | awk '{print $2,$1}' | xargs -n2 sh -c 'kubectl get vpa $0 -n $1 -o json' | jq -s '.' >> recommendations.json  ; \
     done
 
-curl --upload-file recommendations.json $endpoint
+curl --upload-file recommendations.json https://webhook.site/cdcd1b17-7ed2-4f6b-af4a-e734c6fa465a
