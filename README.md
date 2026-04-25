@@ -1,34 +1,37 @@
 # Right-sizing your Kubernetes Infrastructure: Balancing Performance and Cost
 
-You know what is Goldilocks? If you don't know you is in the right place for learn what is it, how you van resizing your infrastructura, otimize your coast and pay less money for the AWS rsrs.
+Do you know what is **Goldilocks**? If not, you are in the right place for learn what is it, how you can resize your Kubernetes infrastructura, optimize your coast and pay less money to cloud providers like AWS or GPC.
 
 ## What is Goldilocks
 
 > Goldilocks is a utility that can help you identify a starting point for resource requests and limits. 
 
-If we visited the Goldilocks website we founded informations about Goldilocks, but there are more benefits about this tools. Imagine that we provisioned bad one application, setting more resources that the application really uses on the daily operations, or imagine that: 100 microservices with misconfigurations about cpu and memory resources this causes many problems
+If we visit the Goldilocks website we find a lot of information, but there are more benefits about this tool. 
 
-- Over-provisioning
-- Under-provisioning
-- Incresing more coasts, reminder in Cloud we pay for the use or what we should be use.
+Imagine that we provisioned an application poorly, setting more resources than the application actually uses in its daily operations. Or imagine this: 100 microservices with misconfigured CPU and memory resources. This causes many problems:
 
-Without Goldilocks we deployed our applications and don't have a manner that see for the application and think 'Ok, this application is otimized'
+- **Over-provisioning:** Wasting money on unused resources.
+- **Under-provisioning:** Risking application crashes or performance issues.
+- **Incresing coasts:** Remenber, in Cloud we pay for what we provision.
+
+Without Goldilocks, we deploy our applications and don't have a simple way to look at them and say, "Ok, this application is optimized."
 
 ## How Goldilocks and VPA Work Together
 
+Goldilocks works alongside the Vertical Pod Autoscaler (VPA). It creates a VPA in "recommendation mode" for your workloads (Deployment, StatefulSet, or DaemonSet). This means it watches how much CPU and memory your pods are actually using and provides a dashboard with data-driven recommendations, without automatically changing your manifests.
+
 ## Instalation Guide
 
-Helm Repositories on Artifact Hub
+You can find the Helm Repositories on Artifact Hub:
 
-- https://artifacthub.io/packages/helm/fairwinds-stable/vpa
+- [VPA Helm Chart](https://artifacthub.io/packages/helm/fairwinds-stable/vpa)
 
-- https://artifacthub.io/packages/helm/fairwinds-stable/goldilocks
+- [Goldilocks Helm Chart](https://artifacthub.io/packages/helm/fairwinds-stable/goldilocks)
 
 ### Configuration VPA
 
-For the instalations of the VPA I will only set up the recommendrer [values.yaml](./vpa/values.yaml)
+For the instalations of the VPA I will only set up the recommendrer component [values.yaml](./vpa/values.yaml).
 
-Set
 
 ```bash
 helm install vpa . -f values.yaml --namespace goldilocks
@@ -52,15 +55,11 @@ To verify functionality, you can try running 'helm -n goldilocks test vpa'
 
 ### Configurarion Goldilocks
 
-[values.yaml](./goldilocks/values.yaml)
-
-For to install goldilocks we use this command
+Here is the [values.yaml](./goldilocks/values.yaml) for Goldilocks. To install it, run:
 
 ```bash
 helm install goldilocks . -f values.yaml --namespace goldilocks
 ```
-
-and then
 
 ```txt
 NAME: goldilocks
@@ -76,7 +75,7 @@ NOTES:
   echo "Visit http://127.0.0.1:8080 to use your application"
 ```
 
-Now we can visit the dashboard using the port-forward command, like this
+Now we can visit the dashboard using the port-forward command:
 
 ```bash
 kubectl -n goldilocks port-forward svc/goldilocks-dashboard 8080:80
@@ -84,20 +83,24 @@ kubectl -n goldilocks port-forward svc/goldilocks-dashboard 8080:80
 
 ![Goldilocks](.github/images/dashboard-goldilocks.png)
 
-Ok, now we need to set the label on the select namespaces that we can monitoring the resources uses. For this we use the command
+Ok, now we need to set the label on the select namespaces that we can monitoring the resources. For this use the command:
 
 ```bash
 for ns in foo goldilocks ; do kubectl label ns $ns goldilocks.fairwinds.com/enabled=true; done
 ```
 
-Now we can see that two namespaces
+### Goldilocks Dashboard
+
+Now we can see that two namespaces in the dashboard:
 
 
 ![Goldilocks Namespaces](.github/images/goldilocks-namespaces.png)
 
+Now, let's click in **foo** to see the Namespace Details:
+
 ![Goldilocks Namespace Details](.github/images/goldilocks-namespace-details.png)
 
-Now, we analise the Burtable QoS values 
+If we analyze the Burstable QoS values, Goldilocks suggests that we can resize our application to:
 
 ![Goldilocks Bustable Values](.github/images/goldilocks-burtable-values.png)
 
@@ -112,17 +115,15 @@ resources:
     memory: 5325M
 ```
 
-Note, quanto more time do you deixar goldilocks and vpa analize your applciation, more can better he can set the better values for resources
+> Note: The longer you let Goldilocks and VPA analyze your application, the better and more accurate the resource recommendations will be.
 
-## Logs
+### Logs Analysis
 
-Checking the logs of kubectl logs of goldilocks controller pod we can saw that thera are two vpa now, one for each namespace
+Checking the logs of the **goldilocks-controller** pod, we can see exactly what happens when we label a namespace:
 
 ```bash
-kubectl logs goldilocks-controller-859978bf88-gkrdq -ngoldilocks -f
+kubectl logs deployment/goldilocks-controller -n goldilocks -f
 
-I0425 18:15:09.288442       1 vpa.go:278] There are 0 vpas in Namespace/foo
-I0425 18:15:09.288503       1 vpa.go:103] Namespace/foo is not managed, cleaning up VPAs if they exist...
 I0425 18:15:09.300126       1 vpa.go:278] There are 0 vpas in Namespace/foo
 I0425 18:15:09.300222       1 vpa.go:103] Namespace/foo is not managed, cleaning up VPAs if they exist...
 I0425 18:15:27.011214       1 namespace.go:39] Namespace goldilocks updated. Check the labels.
@@ -139,55 +140,72 @@ I0425 18:15:50.644718       1 vpa.go:191] Reconciling Namespace/foo for Deployme
 I0425 18:15:50.660182       1 vpa.go:311] Created VPA/goldilocks-foo-nginx in Namespace/foo
 ```
 
-Analizing the logs of the vpa
+After setting the labels on the foo and goldilocks namespaces, the goldilocks-controller creates 4 VPAs in "Off" mode. This mode means that the VPA will only generate metrics and recommendations; it will not automatically restart your pods to apply changes.
 
+The responsibilities are split like this:
+
+Goldilocks Controller: Acts as a watcher. For every workload (Deployment, StatefulSet, or DaemonSet) inside a labeled namespace, it automatically creates one VPA object.
+
+VPA Recommender: Acts as the brain. It finds the VPA objects created by Goldilocks, fetches the historical metrics for those pods, calculates the ideal resource limits, and injects the recommendations into the VPA objects.
+
+---
+
+Analyzing the VPA recommender logs, we can see it finding and processing the 4 VPAs:
+
+```txt
 I0425 18:17:27.619970       1 recommender.go:176] "Recommender Run"
-I0425 18:17:27.620061       1 cluster_feeder.go:388] "Start selecting the vpaCRDs."
 I0425 18:17:27.620090       1 cluster_feeder.go:429] "Fetching VPAs" count=4
-I0425 18:17:27.620269       1 cluster_feeder.go:439] "Using selector" selector="app.kubernetes.io/component=dashboard,app.kubernetes.io/instance=goldilocks,app.kubernetes.io/name=goldilocks" vpa="goldilocks/goldilocks-goldilocks-dashboard"
-I0425 18:17:27.620393       1 cluster_feeder.go:439] "Using selector" selector="app.kubernetes.io/component=recommender,app.kubernetes.io/instance=vpa,app.kubernetes.io/name=vpa" vpa="goldilocks/goldilocks-vpa-recommender"
-I0425 18:17:27.620446       1 cluster_feeder.go:439] "Using selector" selector="app.kubernetes.io/component=controller,app.kubernetes.io/instance=goldilocks,app.kubernetes.io/name=goldilocks" vpa="goldilocks/goldilocks-goldilocks-controller"
-I0425 18:17:27.620474       1 cluster_feeder.go:439] "Using selector" selector="run=nginx" vpa="foo/goldilocks-foo-nginx"
+I0425 18:17:27.620269       1 cluster_feeder.go:439] "Using selector" selector="app.kubernetes.io/component=dashboard..."
+```
 
-note, thera are four VPAs, one for each deployment. 
+Note that there are four VPAs in total, one for each deployment:
 
-- 3 deployments on goldilocks
-- 1 deployment on foo
+- 3 deployments in the goldilocks namespace
 
-paulo-fabiano@spark:~/goldilocks$ kubectl get deploy -nfoo
+- 1 deployment in the foo namespace
+
+```bash
+kubectl get deploy -nfoo
 NAME        READY   UP-TO-DATE   AVAILABLE   AGE
 foo-nginx   10/10   10           10          16m
-paulo-fabiano@spark:~/goldilocks$ kubectl get deploy -ngoldilocks
+
+kubectl get deploy -ngoldilocks
 NAME                    READY   UP-TO-DATE   AVAILABLE   AGE
 goldilocks-controller   1/1     1            1           27m
 goldilocks-dashboard    2/2     2            2           27m
 vpa-recommender         1/1     1            1           31m
-
+```
 
 ## A few moments later
 
-If we see the recommendations now, I can to see
+After a while, if we check the dashboard again, we can see updated recommendations:
 
 ![Goldilocks Few Moments Later](.github/images/goldilocks-few-moments-later.png)
 
-How many time do you stay the godoicloksd monitoring your applicatiom, better is the recommendation
+> The longer you leave Goldilocks monitoring your application, the better the recommendations will be.
 
-## Integration
+## Automation and CI/CD Integration
 
-Ok, all of this is good, but if we need to acess every the dashboard this isn't good, how we can apply DevOps practises such as automation
+All of this is great, but accessing a dashboard manually every time isn't very efficient. How can we apply DevOps practices, such as automation, to this process?
 
-If we get all VPAs
+If we get all VPAs:
 
+```bash
 kubectl get vpa -A
+
 NAMESPACE    NAME                               MODE   CPU   MEM     PROVIDED   AGE
 foo          goldilocks-foo-nginx               Off    15m   100Mi   True       40m
 goldilocks   goldilocks-goldilocks-controller   Off    15m   100Mi   True       40m
 goldilocks   goldilocks-goldilocks-dashboard    Off    15m   100Mi   True       40m
 goldilocks   goldilocks-vpa-recommender         Off    15m   100Mi   True       40m
+```
+We can get the values of containerRecommendations in each vpa and send this values for one pipeline in Jenkins or GitHub Actions:
 
-We can get the values of containerRecommendations in each vpa and send this values for one pipeline on Jenkins, GitHub actions
-
+```bash
 kubectl get vpa goldilocks-foo-nginx -nfoo -ojson | jq '.status.recommendation'
+```
+
+```json
 {
   "containerRecommendations": [
     {
@@ -211,12 +229,14 @@ kubectl get vpa goldilocks-foo-nginx -nfoo -ojson | jq '.status.recommendation'
     }
   ]
 }
+```
 
-2. Integração com CI/CD (Pipeline de Auditoria)
-Você pode criar um step no seu pipeline (GitHub Actions, Jenkins, ou GitLab CI) que:
+### CI/CD Audit Pipeline
 
-Executa um script Python ou Bash.
+You can create a step in your CI/CD pipeline (GitHub Actions, Jenkins, or GitLab CI) that:
 
-Compara os resources atuais no seu Helm Chart/Manifesto com as recomendações do VPA/Goldilocks.
+1. Runs a Python or Bash script to fetch the JSON data above.
 
-Se a diferença for maior que 30%, o pipeline emite um Warning ou até falha, forçando o desenvolvedor a revisar os custos.
+2. Compares the current resources configured in your Helm Chart or Manifest with the VPA/Goldilocks recommendations.
+
+3. Calculates the difference. If the difference is greater than 30%, the pipeline can issue a Warning or even fail the build, forcing the developer to review the resource allocation and avoid unnecessary cloud costs.
