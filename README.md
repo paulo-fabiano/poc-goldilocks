@@ -176,7 +176,7 @@ goldilocks-dashboard    2/2     2            2           27m
 vpa-recommender         1/1     1            1           31m
 ```
 
-## A few moments later
+## A few Moments Later
 
 After a while, if we check the dashboard again, we can see updated recommendations:
 
