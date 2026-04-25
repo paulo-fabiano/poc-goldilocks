@@ -144,9 +144,9 @@ After setting the labels on the foo and goldilocks namespaces, the goldilocks-co
 
 The responsibilities are split like this:
 
-Goldilocks Controller: Acts as a watcher. For every workload (Deployment, StatefulSet, or DaemonSet) inside a labeled namespace, it automatically creates one VPA object.
+- Goldilocks Controller: Acts as a watcher. For every workload (Deployment, StatefulSet, or DaemonSet) inside a labeled namespace, it automatically creates one VPA object.
 
-VPA Recommender: Acts as the brain. It finds the VPA objects created by Goldilocks, fetches the historical metrics for those pods, calculates the ideal resource limits, and injects the recommendations into the VPA objects.
+- VPA Recommender: Acts as the brain. It finds the VPA objects created by Goldilocks, fetches the historical metrics for those pods, calculates the ideal resource limits, and injects the recommendations into the VPA objects.
 
 ---
 
