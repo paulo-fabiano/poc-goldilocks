@@ -233,10 +233,16 @@ kubectl get vpa goldilocks-foo-nginx -nfoo -ojson | jq '.status.recommendation'
 
 ### CI/CD Audit Pipeline
 
-You can create a step in your CI/CD pipeline (GitHub Actions, Jenkins, or GitLab CI) that:
+We can create a step in your CI/CD pipeline (GitHub Actions, Jenkins, or GitLab CI) that:
 
 1. Runs a Python or Bash script to fetch the JSON data above.
 
 2. Compares the current resources configured in your Helm Chart or Manifest with the VPA/Goldilocks recommendations.
 
 3. Calculates the difference. If the difference is greater than 30%, the pipeline can issue a Warning or even fail the build, forcing the developer to review the resource allocation and avoid unnecessary cloud costs.
+
+## Example Audit Pipeline
+
+For our test, I builded one image. Look here: [Dockefile](./audit-pipeline/.docker/Dockerfile)
+
+I also created I helm package that use this image and build one cronJob that runs after 24H, get the values and send this for one endpoiunt
