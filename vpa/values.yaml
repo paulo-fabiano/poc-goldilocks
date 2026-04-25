@@ -45,6 +45,9 @@ serviceAccount:
   # serviceAccount.automountServiceAccountToken -- Automount API credentials for the Service Account
   automountServiceAccountToken: true
 
+# ------------------------------------------ #
+# ----------- Only Recommender ------------- #
+# ------------------------------------------ #
 recommender:
   # recommender.enabled -- If true, the vpa recommender component will be installed.
   enabled: true
