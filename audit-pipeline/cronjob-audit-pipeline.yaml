@@ -1,0 +1,20 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: hello
+  namespace: {{ .Values.namespace | default .Release.Namespace }}
+spec:
+  schedule: "* */12 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: 
+          containers:
+          - name: audit-pipeline
+            image: paulofabianoo/audit-pipeline:v1.0.0
+            imagePullPolicy: IfNotPresent
+            command:
+            - /bin/sh
+            - -c
+          restartPolicy: OnFailure
