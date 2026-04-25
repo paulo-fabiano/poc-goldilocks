@@ -1,0 +1,25 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ .Values.cronJob.name }}
+  namespace: {{ .Values.namespace | default .Release.Namespace }}
+spec:
+  schedule: {{ .Values.cronJob.schedule }}
+  successfulJobsHistoryLimit: {{ .Values.cronJob.successfulJobsHistoryLimit | default 3}}
+  failedJobsHistoryLimit: {{ .Values.cronJob.failedJobsHistoryLimit | default 3}}
+  jobTemplate:
+    spec:
+      backoffLimit: {{ .Values.cronJob.jobTemplate.backoffLimit | default 3 }}
+      completions: {{ .Values.cronJob.jobTemplate.completions | default 1 }}
+      template:
+        spec:
+          serviceAccountName: {{ include "audit-pipeline.serviceAccountName" . }}
+          containers:
+          - name: {{ .Values.cronJob.jobTemplate.name }}
+            image: {{ .Values.cronJob.jobTemplate.image.repository }}:{{ .Values.cronJob.jobTemplate.image.tag }}
+            imagePullPolicy: IfNotPresent
+            command:
+            {{ toYaml .Values.cronJob.jobTemplate.command | nindent 16 }}
+            # args:
+            # {{ toYaml .Values.cronJob.jobTemplate.args | nindent 16 }}
+          restartPolicy: {{ .Values.cronJob.jobTemplate.restartPolicy }}
