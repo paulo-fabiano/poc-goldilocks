@@ -1,5 +1,7 @@
 # Right-sizing your Kubernetes Infrastructure: Balancing Performance and Cost
 
+![Title](.github/images/goldilocks-title-image.png)
+
 Do you know what is **Goldilocks**? If not, you are in the right place for learn what is it, how you can resize your Kubernetes infrastructura, optimize your coast and pay less money to cloud providers like AWS or GPC.
 
 ## What is Goldilocks
