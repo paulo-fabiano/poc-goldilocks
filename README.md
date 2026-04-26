@@ -34,7 +34,7 @@ For the instalations of the VPA I will only set up the recommendrer component [v
 
 
 ```bash
-helm install vpa . -f values.yaml --namespace goldilocks
+helm install vpa . -f values.yaml --namespace goldilocks --create-namespace
 ```
 
 ```text
@@ -58,7 +58,7 @@ To verify functionality, you can try running 'helm -n goldilocks test vpa'
 Here is the [values.yaml](./goldilocks/values.yaml) for Goldilocks. To install it, run:
 
 ```bash
-helm install goldilocks . -f values.yaml --namespace goldilocks
+helm install goldilocks . -f values.yaml --namespace goldilocks --create-namespace
 ```
 
 ```txt
@@ -243,6 +243,281 @@ We can create a step in your CI/CD pipeline (GitHub Actions, Jenkins, or GitLab 
 
 ## Example Audit Pipeline
 
-For our test, I builded one image. Look here: [Dockefile](./audit-pipeline/.docker/Dockerfile)
+For our test, I build a custom Docker image. You can look here: [Dockefile](./audit-pipeline/.docker/Dockerfile).
 
-I also created I helm package that use this image and build one cronJob that runs after 24H, get the values and send this for one endpoiunt
+I also created I Helm chart called **audit-pipeline** [](./audit-pipeline/helm-audit-pipeline/) here. This chart uses the custom image to deploy a CronJob that runs every 12 hours, retrieves the recommendation values, and sends them to an external endpoint.
+
+or this demonstration, I am sending the data to (Webhook.site)[]
+
+![WebHook Site](.github/images/goldilocks-webhook-site.png)
+
+<details>
+  <summary>See more</summary>
+```json
+[
+  {
+    "apiVersion": "autoscaling.k8s.io/v1",
+    "kind": "VerticalPodAutoscaler",
+    "metadata": {
+      "creationTimestamp": "2026-04-26T00:24:17Z",
+      "generation": 1,
+      "labels": {
+        "creator": "Fairwinds",
+        "source": "goldilocks"
+      },
+      "name": "goldilocks-foo-nginx",
+      "namespace": "foo",
+      "resourceVersion": "11943",
+      "uid": "62690f52-0603-4820-8747-ccdbe6e83af1"
+    },
+    "spec": {
+      "targetRef": {
+        "apiVersion": "apps/v1",
+        "kind": "Deployment",
+        "name": "foo-nginx"
+      },
+      "updatePolicy": {
+        "updateMode": "Off"
+      }
+    },
+    "status": {
+      "conditions": [
+        {
+          "lastTransitionTime": "2026-04-26T00:24:39Z",
+          "status": "True",
+          "type": "RecommendationProvided"
+        }
+      ],
+      "recommendation": {
+        "containerRecommendations": [
+          {
+            "containerName": "nginx",
+            "lowerBound": {
+              "cpu": "15m",
+              "memory": "100Mi"
+            },
+            "target": {
+              "cpu": "15m",
+              "memory": "100Mi"
+            },
+            "uncappedTarget": {
+              "cpu": "15m",
+              "memory": "100Mi"
+            },
+            "upperBound": {
+              "cpu": "427m",
+              "memory": "446526269"
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "apiVersion": "autoscaling.k8s.io/v1",
+    "kind": "VerticalPodAutoscaler",
+    "metadata": {
+      "creationTimestamp": "2026-04-26T01:02:45Z",
+      "generation": 1,
+      "labels": {
+        "creator": "Fairwinds",
+        "source": "goldilocks"
+      },
+      "name": "goldilocks-cj-audit-pipeline",
+      "namespace": "goldilocks",
+      "resourceVersion": "11979",
+      "uid": "9eb5e5ac-d4e4-46ee-9664-49aa902a2656"
+    },
+    "spec": {
+      "targetRef": {
+        "apiVersion": "batch/v1",
+        "kind": "CronJob",
+        "name": "cj-audit-pipeline"
+      },
+      "updatePolicy": {
+        "updateMode": "Off"
+      }
+    }
+  },
+  {
+    "apiVersion": "autoscaling.k8s.io/v1",
+    "kind": "VerticalPodAutoscaler",
+    "metadata": {
+      "creationTimestamp": "2026-04-26T00:24:17Z",
+      "generation": 1,
+      "labels": {
+        "creator": "Fairwinds",
+        "source": "goldilocks"
+      },
+      "name": "goldilocks-goldilocks-controller",
+      "namespace": "goldilocks",
+      "resourceVersion": "11941",
+      "uid": "fc0f8c54-2e1c-4958-8584-d687f3dadc84"
+    },
+    "spec": {
+      "targetRef": {
+        "apiVersion": "apps/v1",
+        "kind": "Deployment",
+        "name": "goldilocks-controller"
+      },
+      "updatePolicy": {
+        "updateMode": "Off"
+      }
+    },
+    "status": {
+      "conditions": [
+        {
+          "lastTransitionTime": "2026-04-26T00:24:39Z",
+          "status": "True",
+          "type": "RecommendationProvided"
+        }
+      ],
+      "recommendation": {
+        "containerRecommendations": [
+          {
+            "containerName": "goldilocks",
+            "lowerBound": {
+              "cpu": "15m",
+              "memory": "100Mi"
+            },
+            "target": {
+              "cpu": "23m",
+              "memory": "100Mi"
+            },
+            "uncappedTarget": {
+              "cpu": "23m",
+              "memory": "100Mi"
+            },
+            "upperBound": {
+              "cpu": "871m",
+              "memory": "893293113"
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "apiVersion": "autoscaling.k8s.io/v1",
+    "kind": "VerticalPodAutoscaler",
+    "metadata": {
+      "creationTimestamp": "2026-04-26T00:24:17Z",
+      "generation": 1,
+      "labels": {
+        "creator": "Fairwinds",
+        "source": "goldilocks"
+      },
+      "name": "goldilocks-goldilocks-dashboard",
+      "namespace": "goldilocks",
+      "resourceVersion": "11942",
+      "uid": "3ecb997c-9dba-4332-9522-d82d59c1ae2f"
+    },
+    "spec": {
+      "targetRef": {
+        "apiVersion": "apps/v1",
+        "kind": "Deployment",
+        "name": "goldilocks-dashboard"
+      },
+      "updatePolicy": {
+        "updateMode": "Off"
+      }
+    },
+    "status": {
+      "conditions": [
+        {
+          "lastTransitionTime": "2026-04-26T00:24:39Z",
+          "status": "True",
+          "type": "RecommendationProvided"
+        }
+      ],
+      "recommendation": {
+        "containerRecommendations": [
+          {
+            "containerName": "goldilocks",
+            "lowerBound": {
+              "cpu": "15m",
+              "memory": "100Mi"
+            },
+            "target": {
+              "cpu": "15m",
+              "memory": "100Mi"
+            },
+            "uncappedTarget": {
+              "cpu": "15m",
+              "memory": "100Mi"
+            },
+            "upperBound": {
+              "cpu": "415m",
+              "memory": "434668654"
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "apiVersion": "autoscaling.k8s.io/v1",
+    "kind": "VerticalPodAutoscaler",
+    "metadata": {
+      "creationTimestamp": "2026-04-26T00:24:17Z",
+      "generation": 1,
+      "labels": {
+        "creator": "Fairwinds",
+        "source": "goldilocks"
+      },
+      "name": "goldilocks-vpa-recommender",
+      "namespace": "goldilocks",
+      "resourceVersion": "11944",
+      "uid": "c2c98ddb-1029-48f1-9160-80d339ea0537"
+    },
+    "spec": {
+      "targetRef": {
+        "apiVersion": "apps/v1",
+        "kind": "Deployment",
+        "name": "vpa-recommender"
+      },
+      "updatePolicy": {
+        "updateMode": "Off"
+      }
+    },
+    "status": {
+      "conditions": [
+        {
+          "lastTransitionTime": "2026-04-26T00:24:39Z",
+          "status": "True",
+          "type": "RecommendationProvided"
+        }
+      ],
+      "recommendation": {
+        "containerRecommendations": [
+          {
+            "containerName": "vpa",
+            "lowerBound": {
+              "cpu": "15m",
+              "memory": "100Mi"
+            },
+            "target": {
+              "cpu": "15m",
+              "memory": "100Mi"
+            },
+            "uncappedTarget": {
+              "cpu": "15m",
+              "memory": "100Mi"
+            },
+            "upperBound": {
+              "cpu": "418m",
+              "memory": "897397317"
+            }
+          }
+        ]
+      }
+    }
+  }
+]
+
+
+---
+
+I sent the data to Webhook.site strictly for Proof of Concept (POC) purposes. However, we can now configure our CI/CD pipelines to receive these JSON payloads, compare the resource values, and send alerts or notifications to a Slack channel, for example.
+
+The sky is the limit!
