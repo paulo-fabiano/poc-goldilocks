@@ -21,7 +21,7 @@ spec:
             command:
             {{ toYaml .Values.cronJob.jobTemplate.command | nindent 12 }}
             env:
-              name: URL_PIPELINE
+            - name: URL_PIPELINE
               value: {{ .Values.cronJob.jobTemplate.sendResultsUrl }}
             volumeMounts:
             - name: audit-pipeline

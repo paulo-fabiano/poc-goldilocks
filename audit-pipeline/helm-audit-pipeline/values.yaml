@@ -47,7 +47,7 @@ cronJob:
     command:
     - sh
     - -c 
-    - echo teste
+    - cat /audit-pipeline/command | sh
     # args:
     # URL for send the json file with the recommendations.
     # I'm using webhook.site for this at this moment
