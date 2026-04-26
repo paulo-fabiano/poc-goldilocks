@@ -47,19 +47,11 @@ cronJob:
     command:
     - sh
     - -c 
-    - cat /audit-pipeline/command | sh
+    - cd /audit-pipeline ; cat command | sh
     # args:
     # URL for send the json file with the recommendations.
     # I'm using webhook.site for this at this moment
     sendResultsUrl: https://webhook.site/cdcd1b17-7ed2-4f6b-af4a-e734c6fa465a
-
-
-# This is for setting Kubernetes Annotations to a Pod.
-# For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
-podAnnotations: {}
-# This is for setting Kubernetes Labels to a Pod.
-# For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
-podLabels: {}
 
 podSecurityContext:
   fsGroup: null
@@ -79,9 +71,3 @@ resources:
   requests:
     cpu: 100m
     memory: 128Mi
-
-nodeSelector: {}
-
-tolerations: []
-
-affinity: {}
